@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(cuid())
+  email    String  @unique
+  password String
+  name     String?
+  role     String  @default("user") // "admin"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  scheduled_workouts ScheduledWorkout[]
+}
+
+model Exercise {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  category     String
+  muscle_group String
+  equipment    String?
+  instructions String?
+  focus_area   String?
+  source       String   @default("spreadsheet")
+  api_id       String?
+  user_notes   String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  workout_exercises WorkoutExercise[]
+  exercise_logs     ExerciseLog[]
+
+  @@map("exercises")
+}
+
+model Workout {
+  id                 Int      @id @default(autoincrement())
+  title              String
+  day_of_week        Int
+  description        String?
+  estimated_duration String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  workout_exercises  WorkoutExercise[]
+  scheduled_workouts ScheduledWorkout[]
+  
+  program_id         Int?
+  program            Program? @relation(fields: [program_id], references: [id])
+
+  @@map("workouts")
+}
+
+model Program {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  duration_weeks Int    @default(6)
+  theme       Json?    // { primary: string, accent: string, background: string }
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  workouts    Workout[]
+
+  @@map("programs")
+}
+
+model WorkoutExercise {
+  id             Int     @id @default(autoincrement())
+  workout_id     Int
+  exercise_id    Int
+  section_label  String // Legacy label
+  group_label    String? // "A", "B", "Finisher"
+  order          Int
+  sets           String
+  reps           String
+  rest_period    String? // Text description
+  rest_seconds   Int?    // Numeric timer
+  notes          String?
+  focus          String? // New field from spreadsheet
+  
+  is_complex     Boolean @default(false)
+  is_circuit     Boolean @default(false) // New field for Circuits
+  complex_name   String?
+  complex_rounds String?
+  complex_weight String?
+  complex_rest   String?
+  target_time_seconds Int? // For timed rounds
+
+  workout        Workout  @relation(fields: [workout_id], references: [id], onDelete: Cascade)
+  exercise       Exercise @relation(fields: [exercise_id], references: [id], onDelete: Cascade)
+
+  @@index([workout_id])
+  @@index([exercise_id])
+  @@map("workout_exercises")
+}
+
+model ScheduledWorkout {
+  id             Int       @id @default(autoincrement())
+  workout_id     Int
+  scheduled_date DateTime
+  week_number    Int
+  started_at     DateTime?
+  is_completed   Boolean   @default(false)
+  completed_at   DateTime?
+  duration_seconds Int?
+  rpe            Int?      // Rate of Perceived Exertion (1-10)
+  feeling        String?   // "How did it feel?"
+  notes          String?
+  slug           String?   @unique
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  exercise_logs  ExerciseLog[]
+  complex_logs   ComplexLog[]
+
+  user_id        String
+  user           User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workout        Workout   @relation(fields: [workout_id], references: [id], onDelete: Cascade)
+
+  @@index([workout_id])
+  @@index([user_id])
+  @@map("scheduled_workouts")
+}
+
+model ExerciseLog {
+  id                   Int      @id @default(autoincrement())
+  scheduled_workout_id Int
+  exercise_id          Int
+  set_number           Int
+  reps_completed       Int
+  weight_used          Decimal
+  notes                String?
+  completed            Boolean  @default(true)
+  created_at           DateTime @default(now())
+
+  scheduled_workout    ScheduledWorkout @relation(fields: [scheduled_workout_id], references: [id], onDelete: Cascade)
+  exercise             Exercise         @relation(fields: [exercise_id], references: [id], onDelete: Cascade)
+
+  @@index([scheduled_workout_id])
+  @@index([exercise_id])
+  @@map("exercise_logs")
+}
+
+model ComplexLog {
+  id                   Int      @id @default(autoincrement())
+  scheduled_workout_id Int
+  complex_name         String
+  round_number         Int
+  weight_used          Decimal
+  duration_seconds     Int?
+  notes                String?
+  completed            Boolean  @default(true)
+  created_at           DateTime @default(now())
+
+  scheduled_workout    ScheduledWorkout @relation(fields: [scheduled_workout_id], references: [id], onDelete: Cascade)
+
+  @@index([scheduled_workout_id])
+  @@map("complex_logs")
+}
