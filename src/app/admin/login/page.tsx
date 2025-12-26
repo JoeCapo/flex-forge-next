@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Loader2, Dumbbell } from 'lucide-react';
+import { Lock, Mail, Loader2, ShieldAlert } from 'lucide-react';
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -14,8 +14,8 @@ export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const registered = searchParams.get('registered') === 'true';
-    const callbackUrl = searchParams.get('callbackUrl') || '/';
+    // Check if we were redirected here due to error or callback
+    const callbackUrl = searchParams.get('callbackUrl') || '/admin/dashboard';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,7 +30,7 @@ export default function LoginPage() {
             });
 
             if (result?.error) {
-                setError('Invalid credentials');
+                setError('Invalid admin credentials');
             } else {
                 router.push(callbackUrl);
                 router.refresh();
@@ -44,40 +44,29 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
-            {/* Background decoration */}
             <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-accent blur-[100px]" />
+                <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-red-600 blur-[100px]" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-orange-600 blur-[100px]" />
             </div>
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md bg-surface p-8 rounded-2xl shadow-xl border border-white/10 relative z-10"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-md bg-surface p-8 rounded-2xl shadow-2xl border border-red-500/20 relative z-10"
             >
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-4 text-primary">
-                        <Dumbbell size={24} />
+                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4 text-red-500 border border-red-500/20">
+                        <ShieldAlert size={32} />
                     </div>
-                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        Spartan Elite
+                    <h1 className="text-2xl font-bold text-white tracking-wider">
+                        ADMIN ACCESS
                     </h1>
-                    <p className="text-gray-400 text-sm mt-2">Member Login</p>
+                    <p className="text-gray-400 text-sm mt-2">Restricted Area</p>
                 </div>
-
-                {registered && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm text-center"
-                    >
-                        Registration successful! Please log in.
-                    </motion.div>
-                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300 ml-1">Email</label>
+                        <label className="text-sm font-medium text-gray-300 ml-1">Admin Email</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                             <input
@@ -85,8 +74,8 @@ export default function LoginPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full bg-background/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-600"
-                                placeholder="member@example.com"
+                                className="w-full bg-background/50 border border-red-500/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 transition-all placeholder:text-gray-600"
+                                placeholder="admin@spartan.com"
                             />
                         </div>
                     </div>
@@ -100,7 +89,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full bg-background/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-600"
+                                className="w-full bg-background/50 border border-red-500/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 transition-all placeholder:text-gray-600"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -119,16 +108,19 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+                        className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:opacity-90 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20 tracking-wide"
                     >
-                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In'}
+                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'AUTHENTICATE'}
                     </button>
 
-                    <div className="text-center text-sm text-gray-400">
-                        Don't have an account?{' '}
-                        <a href="/register" className="text-primary hover:text-accent transition-colors font-semibold">
-                            Register Now
-                        </a>
+                    <div className="text-center">
+                        <button
+                            type="button"
+                            onClick={() => router.push('/login')}
+                            className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                        >
+                            Back to Member Login
+                        </button>
                     </div>
                 </form>
             </motion.div>

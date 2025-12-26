@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import { authConfig } from "./auth.config"
+import { verifyPassword } from "@/lib/password"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
@@ -29,7 +30,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     return null
                 }
 
-                if (user.password !== password) {
+                const isValid = await verifyPassword(password, user.password);
+
+                if (!isValid) {
                     return null;
                 }
 

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -22,13 +23,16 @@ async function main() {
 
   // Create Admin User (Optional, if you want it in production seed)
   // Create Admin User
+  const hashedPassword = await bcrypt.hash('admin', 10);
   await prisma.user.upsert({
     where: { email: 'admin@spartan.com' },
-    update: {},
+    update: {
+      password: hashedPassword // Update password in case we are re-seeding existing user
+    },
     create: {
       email: 'admin@spartan.com',
       name: 'Spartan Admin',
-      password: 'admin', // Ideally hashed
+      password: hashedPassword,
       role: 'admin'
     }
   });

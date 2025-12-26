@@ -1,21 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Loader2, Dumbbell } from 'lucide-react';
+import { Lock, Mail, Loader2, User, Dumbbell } from 'lucide-react';
+import Link from 'next/link';
 
-export default function LoginPage() {
+export default function RegisterPage() {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
-    const searchParams = useSearchParams();
-
-    const registered = searchParams.get('registered') === 'true';
-    const callbackUrl = searchParams.get('callbackUrl') || '/';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,20 +20,27 @@ export default function LoginPage() {
         setError('');
 
         try {
-            const result = await signIn('credentials', {
-                email,
-                password,
-                redirect: false,
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password,
+                }),
             });
 
-            if (result?.error) {
-                setError('Invalid credentials');
-            } else {
-                router.push(callbackUrl);
-                router.refresh();
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Registration failed');
             }
-        } catch (err) {
-            setError('Something went wrong');
+
+            // Redirect to login on success
+            router.push('/login?registered=true');
+        } catch (err: any) {
+            setError(err.message);
         } finally {
             setLoading(false);
         }
@@ -60,22 +64,27 @@ export default function LoginPage() {
                         <Dumbbell size={24} />
                     </div>
                     <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        Spartan Elite
+                        Join the Elite
                     </h1>
-                    <p className="text-gray-400 text-sm mt-2">Member Login</p>
+                    <p className="text-gray-400 text-sm mt-2">Create your account</p>
                 </div>
 
-                {registered && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm text-center"
-                    >
-                        Registration successful! Please log in.
-                    </motion.div>
-                )}
-
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300 ml-1">Full Name</label>
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                                className="w-full bg-background/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-600"
+                                placeholder="Spartan Warrior"
+                            />
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-300 ml-1">Email</label>
                         <div className="relative">
@@ -86,7 +95,7 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 className="w-full bg-background/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-600"
-                                placeholder="member@example.com"
+                                placeholder="warrior@example.com"
                             />
                         </div>
                     </div>
@@ -102,6 +111,7 @@ export default function LoginPage() {
                                 required
                                 className="w-full bg-background/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-600"
                                 placeholder="••••••••"
+                                minLength={6}
                             />
                         </div>
                     </div>
@@ -121,14 +131,14 @@ export default function LoginPage() {
                         disabled={loading}
                         className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
                     >
-                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In'}
+                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Register'}
                     </button>
 
                     <div className="text-center text-sm text-gray-400">
-                        Don't have an account?{' '}
-                        <a href="/register" className="text-primary hover:text-accent transition-colors font-semibold">
-                            Register Now
-                        </a>
+                        Already have an account?{' '}
+                        <Link href="/login" className="text-primary hover:text-accent transition-colors">
+                            Sign In
+                        </Link>
                     </div>
                 </form>
             </motion.div>
