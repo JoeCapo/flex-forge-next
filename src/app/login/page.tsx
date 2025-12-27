@@ -12,10 +12,17 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
-    const searchParams = useSearchParams();
 
-    const registered = searchParams.get('registered') === 'true';
-    const callbackUrl = searchParams.get('callbackUrl') || '/';
+    // Get params from URL (avoiding useSearchParams to prevent Suspense requirement)
+    const getParams = () => {
+        if (typeof window === 'undefined') return { registered: false, callbackUrl: '/' };
+        const params = new URLSearchParams(window.location.search);
+        return {
+            registered: params.get('registered') === 'true',
+            callbackUrl: params.get('callbackUrl') || '/'
+        };
+    };
+    const { registered, callbackUrl } = getParams();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

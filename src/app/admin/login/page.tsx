@@ -12,10 +12,14 @@ export default function AdminLoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
-    const searchParams = useSearchParams();
 
-    // Check if we were redirected here due to error or callback
-    const callbackUrl = searchParams.get('callbackUrl') || '/admin/dashboard';
+    // Get callbackUrl from URL (avoiding useSearchParams to prevent Suspense requirement)
+    const getCallbackUrl = () => {
+        if (typeof window === 'undefined') return '/admin/dashboard';
+        const params = new URLSearchParams(window.location.search);
+        return params.get('callbackUrl') || '/admin/dashboard';
+    };
+    const callbackUrl = getCallbackUrl();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
