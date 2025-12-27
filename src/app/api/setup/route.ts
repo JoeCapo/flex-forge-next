@@ -9,7 +9,16 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     try {
         // Check if database is already set up by looking for existing users
-        const existingUsers = await prisma.user.count();
+        // If tables don't exist, this will throw an error, which we'll catch and proceed with setup
+        let existingUsers = 0;
+        try {
+            existingUsers = await prisma.user.count();
+        } catch (error: any) {
+            // Tables don't exist yet, which is fine - we'll create them
+            if (!error.message.includes('does not exist')) {
+                throw error; // Re-throw if it's a different error
+            }
+        }
 
         if (existingUsers > 0) {
             return NextResponse.json({
