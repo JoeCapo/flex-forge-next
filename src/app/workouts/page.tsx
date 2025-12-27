@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Dumbbell, ArrowRight } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default async function WorkoutsIndex() {
     const workouts = await prisma.workout.findMany({
         orderBy: { day_of_week: 'asc' },

@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/Navigation";
 import { cn } from "@/lib/utils";
-import { prisma } from "@/lib/prisma";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = Geist({
@@ -26,9 +25,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch active program theme
-  const program = await prisma.program.findFirst();
-  const theme = program?.theme as any;
+  // Theme will be fetched client-side or per-page as needed
+  const theme = undefined;
 
   return (
     <html lang="en" className="dark">

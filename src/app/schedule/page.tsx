@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { auth } from "@/auth";
 import { ResetButton } from "@/components/schedule/ScheduleActionButtons";
 
+export const dynamic = 'force-dynamic';
+
 export default async function SchedulePage() {
     const session = await auth();
 

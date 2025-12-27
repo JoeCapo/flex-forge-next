@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Play, Calendar, TrendingUp, Dumbbell, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Dashboard() {
   const session = await auth();
   const today = new Date();
