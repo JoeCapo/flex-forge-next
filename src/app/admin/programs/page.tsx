@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Plus, Trash2, Calendar } from "lucide-react";
 import { createProgram, deleteProgram } from "@/app/actions/admin";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminProgramsPage() {
     const programs = await prisma.program.findMany({
         orderBy: { created_at: 'desc' },

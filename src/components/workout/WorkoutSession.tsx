@@ -42,6 +42,9 @@ type WorkoutData = {
     feeling?: string | null;
 };
 
+type HistoryMap = Record<number, { weight: number, reps: number, date: Date }>;
+
+
 // ... Grouping Logic (unchanged) ...
 type GroupedItem =
     | { type: 'single'; data: WorkoutExercise }
@@ -58,18 +61,21 @@ function groupExercises(exercises: WorkoutExercise[]): GroupedItem[] {
             if (currentGroup && currentGroup.label === groupKey) {
                 currentGroup.items.push(ex);
             } else {
-                if (currentGroup) grouped.push({ type: 'group', ...currentGroup });
+                if (currentGroup) grouped.push({ type: 'group', label: currentGroup.label, items: currentGroup.items, isComplex: currentGroup.isComplex });
                 currentGroup = { label: groupKey, items: [ex], isComplex: ex.is_complex };
             }
         } else {
             if (currentGroup) {
-                grouped.push({ type: 'group', ...currentGroup });
+                grouped.push({ type: 'group', label: currentGroup.label, items: currentGroup.items, isComplex: currentGroup.isComplex });
                 currentGroup = null;
             }
             grouped.push({ type: 'single', data: ex });
         }
     });
-    if (currentGroup) grouped.push({ type: 'group', ...currentGroup });
+    if (currentGroup) {
+        const group: { label: string; items: WorkoutExercise[]; isComplex: boolean } = currentGroup;
+        grouped.push({ type: 'group', label: group.label, items: group.items, isComplex: group.isComplex });
+    }
 
     return grouped;
 }
@@ -157,7 +163,7 @@ function RoundStopwatch({ onStop }: { onStop: (s: number) => void }) {
 }
 
 
-export function WorkoutSession({ data }: { data: WorkoutData }) {
+export function WorkoutSession({ data, history }: { data: WorkoutData, history?: HistoryMap }) {
     const router = useRouter();
     const [expandedExercise, setExpandedExercise] = useState<number | null>(null);
     const [isComplete, setIsComplete] = useState(data.is_completed);
@@ -282,7 +288,7 @@ export function WorkoutSession({ data }: { data: WorkoutData }) {
             <header className="flex justify-between items-start mb-6 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-40 border-b border-white/5 -mx-4 px-4">
                 <div>
                     <h1 className="text-2xl font-bold font-oswald text-primary">{data.workout.title}</h1>
-                    <p className="text-xs text-gray-500">Day {data.workout.workout_exercises[0]?.workout_id}</p>
+                    <p className="text-xs text-gray-500">Workout #{data.id}</p>
                 </div>
                 <GlobalTimer seconds={elapsedSeconds} />
             </header>
